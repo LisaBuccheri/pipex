@@ -6,53 +6,93 @@
 /*   By: lbuccher <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/15 16:03:44 by lbuccher          #+#    #+#             */
-/*   Updated: 2021/12/15 16:03:51 by lbuccher         ###   ########.fr       */
+/*   Updated: 2021/12/17 16:57:51 by lbuccher         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
-#include <unistd.h>
-#include <stdio.h>
-#include <sys/wait.h>
-#include <sys/types.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <string.h>
-#include <fcntl.h>
+#include "pipex.h"
 
-void	parent(int fd_out, char *argv[], char *env[], int fd[2])
+char	**get_path(char *env[])
 {
-	int		status;
-	char	*cmd[2];
+	int		i;
+	char	*all_path;
+	char	**split_path;
 
-	cmd[0] = argv[3];
-	cmd[1] = 0;
-	waitpid(-1, &status, 0);
-	if (dup2(fd_out, STDOUT_FILENO) < 0)
-		return (perror("dup2 parent"));
+	i = 0;
+	while (*env)
+	{
+		if (ft_strnstr(*env, "PATH", 4) != 0)
+			break ;
+		(*env)++;
+	}
+	all_path = ft_substr(*env, 5, ft_strlen(*env) - 5);
+	split_path = ft_split(all_path, ':');
+	free(all_path);
+	return (split_path);
+}
+
+void	parent(t_fd fds, char *argv[], char *env[], int fd[2])
+{
+	int		i;
+	char	**cmd;
+	char	**paths;
+	char	*cmd_path;
+
+	i = -1;
+	cmd = ft_split(argv[3], ' ');
+	paths = get_path(env);
+	if (dup2(fds.f_out, STDOUT_FILENO) < 0)
+		return (perror("fds.f_out"));
 	if (dup2(fd[0], STDIN_FILENO) < 0)
-		return (perror("dup2-2 parent"));
-	close(fd[1]);
-	close(fd_out);
-	if (execve(argv[3], cmd, env) < 0)
-		return (perror("execve parent"));
+		return (perror("fd[0]"));
+	close_pipe(fds, fd);
+	while (paths[++i])
+	{
+		cmd_path = ft_strjoin(paths[i], "/");
+		cmd_path = ft_strjoin(cmd_path, cmd[0]);
+		if (access(cmd_path, F_OK) == 0)
+			break ;
+		free(cmd_path);
+	}
+	execve(cmd_path, cmd, env);
+	perror(cmd_path);
+	free(paths);
+	free(cmd);
+	if (access(cmd_path, F_OK) != 0)
+		exit(0);
 }
 
-void	child(int fd_in, char *argv[], char *env[], int fd[2])
+void	child(t_fd fds, char *argv[], char *env[], int fd[2])
 {
-	char	*cmd[2];
+	int		i;
+	char	**cmd;
+	char	**paths;
+	char	*cmd_path;
 
-	cmd[0] = argv[2];
-	cmd[1] = 0;
-	if (dup2(fd_in, STDIN_FILENO) < 0)
-		return (perror("dup2 child"));
+	i = -1;
+	cmd = ft_split(argv[2], ' ');
+	paths = get_path(env);
+	if (dup2(fds.f_in, STDIN_FILENO) < 0)
+		return (perror("fds.f_in"));
 	if (dup2(fd[1], STDOUT_FILENO) < 0)
-		return (perror("dup2-2 child"));
-	close(fd[0]);
-	close(fd_in);
-	if (execve(argv[2], cmd, env) < 0)
-		return (perror("execve child"));
+		return (perror("fd[1]"));
+	close_pipe(fds, fd);
+	while (paths[++i])
+	{
+		cmd_path = ft_strjoin(paths[i], "/");
+		cmd_path = ft_strjoin(cmd_path, cmd[0]);
+		if (access(cmd_path, F_OK) == 0)
+			break ;
+		free(cmd_path);
+	}
+	execve(cmd_path, cmd, env);
+	perror(cmd_path);
+	free(paths);
+	free(cmd);
+	if (access(cmd_path, F_OK) != 0)
+		exit(0);
 }
 
-void	pipex(int fd_in, int fd_out, char *argv[], char *env[])
+void	pipex(t_fd fds, char *argv[], char *env[])
 {
 	int	fd[2];
 	int	pid;
@@ -63,23 +103,23 @@ void	pipex(int fd_in, int fd_out, char *argv[], char *env[])
 	if (pid < 0)
 		return (perror("fork"));
 	else if (pid == 0)
-		child(fd_in, argv, env, fd);
+		child(fds, argv, env, fd);
 	else
-		parent(fd_out, argv, env, fd);
+		parent(fds, argv, env, fd);
 }
 
 int	main(int argc, char *argv[], char *env[])
 {
-	int	f_in;
-	int	f_out;
+	t_fd	fds;
 
-	f_in = open(argv[1], O_RDONLY);
-	f_out = open(argv[4], O_CREAT | O_RDWR | O_TRUNC, 0644);
-	if (f_in < 0 || f_out < 0)
-	{
-		printf("error open f_in: %d\t f_out: %d\n", f_in, f_out);
-		return (1);
-	}
-	pipex(f_in, f_out, argv, env);
+	if (argc < 4)
+		exit(1);
+	fds.f_in = open(argv[1], O_RDONLY);
+	fds.f_out = open(argv[4], O_CREAT | O_RDWR | O_TRUNC, 0644);
+	if (fds.f_in < 0 || fds.f_out < 0)
+		exit(1);
+	pipex(fds, argv, env);
+	close(fds.f_in);
+	close(fds.f_out);
 	return (0);
 }
