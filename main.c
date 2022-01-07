@@ -13,14 +13,12 @@
 
 char	**get_path(char *env[])
 {
-	int		i;
 	char	*all_path;
 	char	**split_path;
 
-	i = 0;
 	while (*env)
 	{
-		if (ft_strnstr(*env, "PATH", 4) != 0)
+		if (ft_strncmp(*env, "PATH=", 5) == 0)
 			break ;
 		(*env)++;
 	}
@@ -40,25 +38,21 @@ void	parent(t_fd fds, char *argv[], char *env[], int fd[2])
 	i = -1;
 	cmd = ft_split(argv[3], ' ');
 	paths = get_path(env);
-	if (dup2(fds.f_out, STDOUT_FILENO) < 0)
-		return (perror("fds.f_out"));
-	if (dup2(fd[0], STDIN_FILENO) < 0)
-		return (perror("fd[0]"));
+	if (dup2(fds.f_out, STDOUT_FILENO) < 0 || dup2(fd[0], STDIN_FILENO) < 0)
+		return (perror("fd"));
 	close_pipe(fds, fd);
 	while (paths[++i])
 	{
 		cmd_path = ft_strjoin(paths[i], "/");
+		if (ft_strncmp(cmd_path, cmd[0], ft_strlen(cmd_path)) == 0)
+			break ;
 		cmd_path = ft_strjoin(cmd_path, cmd[0]);
 		if (access(cmd_path, F_OK) == 0)
 			break ;
-		free(cmd_path);
+		if (paths[i + 1])
+			free(cmd_path);
 	}
-	execve(cmd_path, cmd, env);
-	perror(cmd_path);
-	free(paths);
-	free(cmd);
-	if (access(cmd_path, F_OK) != 0)
-		exit(0);
+	ft_end_process(cmd_path, cmd, paths, env);
 }
 
 void	child(t_fd fds, char *argv[], char *env[], int fd[2])
@@ -71,31 +65,27 @@ void	child(t_fd fds, char *argv[], char *env[], int fd[2])
 	i = -1;
 	cmd = ft_split(argv[2], ' ');
 	paths = get_path(env);
-	if (dup2(fds.f_in, STDIN_FILENO) < 0)
-		return (perror("fds.f_in"));
-	if (dup2(fd[1], STDOUT_FILENO) < 0)
-		return (perror("fd[1]"));
+	if (dup2(fds.f_in, STDIN_FILENO) < 0 || dup2(fd[1], STDOUT_FILENO) < 0)
+		return (perror("fd"));
 	close_pipe(fds, fd);
 	while (paths[++i])
 	{
 		cmd_path = ft_strjoin(paths[i], "/");
+		if (ft_strncmp(cmd_path, cmd[0], ft_strlen(cmd_path)) == 0)
+			break ;
 		cmd_path = ft_strjoin(cmd_path, cmd[0]);
 		if (access(cmd_path, F_OK) == 0)
 			break ;
-		free(cmd_path);
+		if (paths[i + 1])
+			free(cmd_path);
 	}
-	execve(cmd_path, cmd, env);
-	perror(cmd_path);
-	free(paths);
-	free(cmd);
-	if (access(cmd_path, F_OK) != 0)
-		exit(0);
+	ft_end_process(cmd_path, cmd, paths, env);
 }
 
 void	pipex(t_fd fds, char *argv[], char *env[])
 {
-	int	fd[2];
-	int	pid;
+	int		fd[2];
+	int		pid;
 
 	if (pipe(fd) < 0)
 		return (perror("pipe"));
@@ -108,17 +98,17 @@ void	pipex(t_fd fds, char *argv[], char *env[])
 		parent(fds, argv, env, fd);
 }
 
-int	main(int argc, char *argv[], char *env[])
+int	main(int argc, char *argv[], char *envp[])
 {
 	t_fd	fds;
 
-	if (argc < 4)
+	if (argc != 5)
 		exit(1);
 	fds.f_in = open(argv[1], O_RDONLY);
 	fds.f_out = open(argv[4], O_CREAT | O_RDWR | O_TRUNC, 0644);
-	if (fds.f_in < 0 || fds.f_out < 0)
-		exit(1);
-	pipex(fds, argv, env);
+	if (fds.f_out < 0)
+		exit(127);
+	pipex(fds, argv, envp);
 	close(fds.f_in);
 	close(fds.f_out);
 	return (0);

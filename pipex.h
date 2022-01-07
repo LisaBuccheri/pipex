@@ -31,6 +31,7 @@ size_t	ft_strlen(const char *s);
 
 int		count(char const *s, char c);
 
+void	ft_free(char **paths, char **cmd);
 void	close_pipe(t_fd fds, int fd[2]);
 void	parent(t_fd fds, char *argv[], char *env[], int fd[2]);
 void	child(t_fd fds, char *argv[], char *env[], int fd[2]);
@@ -47,5 +48,9 @@ char	**get_path(char *env[]);
 char	**null_return(int i, char **t);
 char	**alloc_memory(int len, char **t, char const *s, char c);
 char	**ft_split(char const *s, char c);
+
+int		ft_strncmp(const char *s1, const char *s2, size_t n);
+void	perror_cnf(char *str, char *cmd, int fd);
+void	ft_end_process(char *cmd_path, char **cmd, char **path, char **env);
 
 #endif

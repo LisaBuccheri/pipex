@@ -21,6 +21,7 @@ SRCS = 	main.c \
 		ft_strlen.c \
 		ft_strnstr.c \
 		ft_substr.c \
+		ft_strncmp.c
 
 OBJ = $(SRCS:.c=.o)
 
