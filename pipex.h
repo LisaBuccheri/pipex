@@ -6,7 +6,7 @@
 /*   By: lbuccher <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/20 22:18:29 by lbuccher          #+#    #+#             */
-/*   Updated: 2021/12/21 18:15:23 by lbuccher         ###   ########.fr       */
+/*   Updated: 2022/01/12 15:16:02 by lbuccher         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #ifndef PIPEX_H
@@ -52,5 +52,6 @@ char	**ft_split(char const *s, char c);
 int		ft_strncmp(const char *s1, const char *s2, size_t n);
 void	perror_cnf(char *str, char *cmd, int fd);
 void	ft_end_process(char *cmd_path, char **cmd, char **path, char **env);
+void	process(char *argv[], char *env[]);
 
 #endif

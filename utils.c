@@ -11,6 +11,16 @@
 /* ************************************************************************** */
 #include "pipex.h"
 
+int	ft_matrix_len(char **matrix)
+{
+	int	i;
+
+	i = 0;
+	while (matrix && matrix[i])
+		i++;
+	return (i);
+}
+
 void	close_pipe(t_fd fds, int fd[2])
 {
 	close(fd[1]);
@@ -21,6 +31,15 @@ void	close_pipe(t_fd fds, int fd[2])
 
 void	ft_free(char **paths, char **cmd)
 {
+	int	path_len;
+	int	cmd_len;
+
+	path_len = ft_matrix_len(paths);
+	cmd_len = ft_matrix_len(cmd);
+	while (paths && (path_len >= 0))
+		free(paths[path_len--]);
+	while (cmd && (cmd_len >= 0))
+		free(cmd[cmd_len--]);
 	if (paths)
 		free(paths);
 	if (cmd)
@@ -41,6 +60,7 @@ void	ft_end_process(char *cmd_path, char **cmd, char **paths, char **env)
 	execve(cmd_path, cmd, env);
 	if (access(cmd_path, F_OK) != 0)
 		perror_cnf("command not found: ", cmd[0], 2);
+	free(cmd_path);
 	ft_free(paths, cmd);
 	exit(127);
 }

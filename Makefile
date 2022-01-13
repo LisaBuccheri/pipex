@@ -6,13 +6,14 @@
 #    By: lbuccher <marvin@42.fr>                    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2021/12/21 13:37:52 by lbuccher          #+#    #+#              #
-#    Updated: 2021/12/21 13:37:54 by lbuccher         ###   ########.fr        #
+#    Updated: 2022/01/12 16:52:01 by lbuccher         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 NAME = pipex
 
 SRCS = 	main.c \
+		pipex.c \
 		utils.c \
 		ft_calloc.c \
 		ft_strdup.c \
