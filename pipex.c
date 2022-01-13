@@ -28,7 +28,7 @@ char	**get_path(char *env[])
 	return (split_path);
 }
 
-void	process(char *argv[], char *env[])
+void	process(char *argv, char *env[])
 {
 	int		i;
 	char	*tmp;
@@ -37,7 +37,7 @@ void	process(char *argv[], char *env[])
 	char	*cmd_path;
 
 	i = -1;
-	cmd = ft_split(argv[3], ' ');
+	cmd = ft_split(argv, ' ');
 	paths = get_path(env);
 	while (paths[++i])
 	{
@@ -47,7 +47,7 @@ void	process(char *argv[], char *env[])
 		tmp = ft_strjoin(cmd_path, cmd[0]);
 		free(cmd_path);
 		cmd_path = tmp;
-		if (access(cmd_path, F_OK) == 0)
+		if (!access(cmd_path, F_OK))
 			break ;
 		if (paths[i + 1])
 			free(cmd_path);
@@ -55,20 +55,20 @@ void	process(char *argv[], char *env[])
 	ft_end_process(cmd_path, cmd, paths, env);
 }
 
-void	parent(t_fd fds, char *argv[], char *env[], int fd[2])
+void	parent(t_fd fds, char **argv, char *env[], int fd[2])
 {
 	if (dup2(fds.f_out, STDOUT_FILENO) < 0 || dup2(fd[0], STDIN_FILENO) < 0)
 		return (perror("fd"));
 	close_pipe(fds, fd);
-	process(argv, env);
+	process(argv[3], env);
 }
 
-void	child(t_fd fds, char *argv[], char *env[], int fd[2])
+void	child(t_fd fds, char **argv, char *env[], int fd[2])
 {
 	if (dup2(fds.f_in, STDIN_FILENO) < 0 || dup2(fd[1], STDOUT_FILENO) < 0)
 		return (perror("fd"));
 	close_pipe(fds, fd);
-	process(argv, env);
+	process(argv[2], env);
 }
 
 void	pipex(t_fd fds, char *argv[], char *env[])

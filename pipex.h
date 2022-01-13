@@ -52,6 +52,6 @@ char	**ft_split(char const *s, char c);
 int		ft_strncmp(const char *s1, const char *s2, size_t n);
 void	perror_cnf(char *str, char *cmd, int fd);
 void	ft_end_process(char *cmd_path, char **cmd, char **path, char **env);
-void	process(char *argv[], char *env[]);
+void	process(char *argv, char *env[]);
 
 #endif
